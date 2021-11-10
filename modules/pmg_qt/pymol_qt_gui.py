@@ -731,7 +731,8 @@ PyMOL> color ye<TAB>    (will autocomplete "yellow")
             height = form.input_height.value()
             if ray:
                 self.cmd.set('opaque_background',
-                        not form.input_transparent.isChecked())
+                        not form.input_transparent.isChecked(),
+                        updates=0)
                 self.cmd.do('ray %d, %d, async=1' % (width, height))
             else:
                 self.cmd.do('draw %d, %d' % (width, height))

@@ -517,14 +517,10 @@ SEE ALSO
 
     redo, push_undo
     '''
-        r = DEFAULT_ERROR
-        try:
-            _self.lock(_self)
-            r = _cmd.undo(_self._COb,-1)
-        finally:
-            _self.unlock(r,_self)
-        if _self._raising(r,_self): raise pymol.CmdException
-        return r
+        if _self.undomgr is None:
+            print('No undo manager')
+            return
+        _self.undomgr.undo()
 
     def push_undo(selection, just_coordinates=1, finish_undo=0, add_objects=0, delete_objects=0, state=0, _self=cmd):
         '''
@@ -570,14 +566,10 @@ SEE ALSO
 
     undo, push_undo
     '''
-        r = DEFAULT_ERROR
-        try:
-            _self.lock(_self)
-            r = _cmd.undo(_self._COb,1)
-        finally:
-            _self.unlock(r,_self)
-        if _self._raising(r,_self): raise pymol.CmdException
-        return r
+        if _self.undomgr is None:
+            print('No undo manager')
+            return
+        _self.undomgr.redo()
 
     order_dict = {
     # simulation

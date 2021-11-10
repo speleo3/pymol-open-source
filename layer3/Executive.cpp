@@ -58,6 +58,7 @@
 #include"Selector.h"
 #include"Vector.h"
 #include"Color.h"
+#include"Session.h"
 #include"Setting.h"
 #include"Matrix.h"
 #include"P.h"
@@ -4824,6 +4825,8 @@ pymol::Result<std::pair<float, float>> ExecutiveSpectrum(PyMOLGlobals* G,
 
       }
     }
+
+    SessionDirty(G);
   }
   return ret;
 }
@@ -9913,6 +9916,7 @@ pymol::Result<int> ExecutiveIterate(PyMOLGlobals * G, const char *str1, const ch
     }
     if (!read_only) {
       SeqChanged(G);
+      SessionDirty(G);
     }
   } else {
     if(!quiet) {
@@ -10181,6 +10185,7 @@ pymol::Result<int> ExecutiveIterateState(PyMOLGlobals* G, int state,
       // for dynamic_measures
       ExecutiveUpdateCoordDepends(G, nullptr);
       SeqChanged(G);
+      SessionDirty(G);
     }
     if(!quiet) {
       if(!read_only) {

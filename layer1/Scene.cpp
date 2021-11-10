@@ -39,6 +39,7 @@ Z* -------------------------------------------------------------------
 #include"ButMode.h"
 #include"Control.h"
 #include"Selector.h"
+#include"Session.h"
 #include"Setting.h"
 #include"Movie.h"
 #include"MyPNG.h"
@@ -4588,11 +4589,15 @@ void SceneUpdate(PyMOLGlobals * G, int force)
   PRINTFD(G, FB_Scene)
     " SceneUpdate: entered.\n" ENDFD;
 
+  SessionScopedSuspendDirty suspend_dirty(G);
+
   OrthoBusyPrime(G);
   WizardDoPosition(G, false);
   WizardDoView(G, false);
   EditorUpdate(G);
   SceneStencilCheck(G);
+
+  suspend_dirty.exit();
 
   if(defer_builds_mode == 0) {
     if(SettingGetGlobal_i(G, cSetting_draw_mode) == -2) {

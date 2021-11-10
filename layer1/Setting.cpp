@@ -25,6 +25,7 @@ Z* -------------------------------------------------------------------
 #include"Err.h"
 #include"MemoryDebug.h"
 #include"Ortho.h"
+#include"Session.h"
 #include"Setting.h"
 #include"Scene.h"
 #include"ButMode.h"
@@ -685,6 +686,31 @@ static bool is_session_blacklisted(int index) {
 #elif defined(_PYMOL_ACTIVEX)
   case cSetting_async_builds:
 #endif
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Return true if the given setting index should not trigger an undo event.
+ */
+static bool is_setting_undo_blacklisted(int index)
+{
+  if (is_session_blacklisted(index)) {
+    return true;
+  }
+
+  switch (index) {
+  case cSetting_button_mode:
+  case cSetting_button_mode_name:
+  case cSetting_state:
+  case cSetting_frame:
+  case cSetting_auto_color_next:
+  case cSetting_mouse_selection_mode:
+  case cSetting_show_frame_rate:
+  case cSetting_pse_binary_dump:
+  case cSetting_fetch_type_default:
     return true;
   }
 
@@ -2988,6 +3014,10 @@ void SettingGenerateSideEffects(PyMOLGlobals * G, int index, const char *sele, i
 #endif
   default:
     break;
+  }
+
+  if (!is_setting_undo_blacklisted(index)) {
+    SessionDirty(G);
   }
 }
 
