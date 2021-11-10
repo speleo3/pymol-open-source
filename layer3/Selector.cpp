@@ -63,6 +63,7 @@ Z* -------------------------------------------------------------------
 #include "pymol/zstring_view.h"
 
 #include "SelectorDef.h"
+#include "Session.h"
 
 using SelectorInfoIter_t = decltype(CSelectorManager::Info)::iterator;
 
@@ -6430,6 +6431,10 @@ void SelectorDelete(PyMOLGlobals * G, const char *sele)
   assert(!SelectorIsTmp(sele) ||
          sele == pymol::string_format("%s%d", cSelectorTmpPrefix, it->ID));
 
+  if (sele[0] != '_') {
+    SessionDirty(G);
+  }
+
   // get rid of existing selection
   SelectorDeleteSeleAtIter(G, it);
 }
@@ -6718,6 +6723,10 @@ static int SelectorEmbedSelection(PyMOLGlobals * G, const int *atom, pymol::zstr
   if(exec_managed) {
     if(newFlag)
       ExecutiveManageSelection(G, name.c_str());
+
+    if (name[0] != '_') {
+      SessionDirty(G, SESSION_DIRTY_SELE);
+    }
   }
   PRINTFD(G, FB_Selector)
     " Selector: Embedded %s, %d atoms.\n", name.c_str(), c ENDFD;

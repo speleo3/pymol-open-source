@@ -54,6 +54,8 @@ using StateIndexPython_t = int; ///< 1-based state index (Python/Settings)
 constexpr StateIndex_t cStateAll = -1;
 constexpr StateIndex_t cStateCurrent = -2;
 
+using SessionDirtyMask = unsigned;
+
 typedef struct _CMemoryCache CMemoryCache;
 struct CIsosurf;
 typedef struct _CTetsurf CTetsurf;
@@ -223,6 +225,9 @@ struct PyMOLGlobals {
   struct { lexidx_t
 #include "lex_constants.h"
     _; } lex_const;
+
+  SessionDirtyMask session_dirty_mask = 0;
+  const char* session_dirty_label = nullptr;
 };
 
 

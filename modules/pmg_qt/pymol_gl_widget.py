@@ -99,7 +99,13 @@ class PyMOLGLWidget(BaseGLWidget):
         self.pymol.start()
         self.cmd = self.pymol.cmd
 
+        # undo manager
+        from pymol import undoing2020
+        self.cmd.undomgr = undoing2020.UndoManager(self.cmd)
+
         # capture python output for feedback
+        sys._stdout = sys.stdout
+        sys._stderr = sys.stderr
         import pcatch
         pcatch._install()
 
@@ -244,6 +250,9 @@ class PyMOLGLWidget(BaseGLWidget):
         idle = self.pymol.idle()
         if idle or self.pymol.getRedisplay():
             self.update()
+            self.cmd.undomgr.idle_reset()
+        else:
+            self.cmd.undomgr.idle(20)
 
         self._timer.start(20)
 

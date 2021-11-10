@@ -332,6 +332,8 @@ with a slash (/) forces the interpreter to pass it to Python. See also the
         kwhash = Shortcut(kw_list)
         keywords.fix_dict(keyword)
 
+        undomgr = None
+
         # informational or API-only functions which don't exist in the
         # PyMOL command language namespace
 
