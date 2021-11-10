@@ -59,6 +59,7 @@ Z* -------------------------------------------------------------------
 #include"main.h"
 #include"Scene.h"
 #include"SceneRay.h"
+#include"Session.h"
 #include"Setting.h"
 #include"Movie.h"
 #include"P.h"
@@ -403,6 +404,18 @@ static PyObject *CmdGetModalDraw(PyObject * self, PyObject * args)
   return APIResultCode(status);
 }
 
+static PyObject* CmdSessionGetDirty(PyObject* self, PyObject* args)
+{
+  PyMOLGlobals* G = nullptr;
+  int reset = true;
+  API_SETUP_ARGS(G, self, args, "O|i", &self, &reset);
+
+  auto* label = G->session_dirty_label;
+  auto dirty = SessionGetDirty(G, reset);
+
+  return Py_BuildValue("is", dirty, label);
+}
+
 static PyObject *CmdPseudoatom(PyObject * self, PyObject * args)
 {
   PyMOLGlobals *G = nullptr;
@@ -441,6 +454,7 @@ static PyObject *CmdFixChemistry(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossii", &self, &str2, &str3, &invalidate, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveFixChemistry(G, str2, str3, invalidate, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -605,6 +619,7 @@ static PyObject *CmdSetRawAlignment(PyObject * self, PyObject * args)
         &self);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSetRawAlignment(G, alnname, raw, guidename, state, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -830,6 +845,7 @@ static PyObject *CmdReinitialize(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ois", &self, &what, &object);
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveReinitialize(G, what, object);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -926,6 +942,7 @@ static PyObject *CmdSetSymmetry(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveSetSymmetry(
       G, str1, state, a, b, c, alpha, beta, gamma, str2, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -967,6 +984,7 @@ static PyObject *CmdSmooth(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSmooth(
       G, sele, cycles, window, first, last, ends, quiet, cutoff, pbc);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1027,6 +1045,7 @@ static PyObject *CmdSetName(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oss", &self, &str1, &str2);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSetName(G, str1, str2);
+  SessionDirty(G);
   APIExit(G);
   if (result) {
     return APISuccess();
@@ -1117,6 +1136,7 @@ static PyObject *CmdScene(PyObject * self, PyObject * args)
   margs.new_key = new_key ? new_key : "";
   margs.sele = sele;
   auto res = MovieSceneFunc(G, margs);
+  SessionDirty(G);
   APIExitBlocked(G);
   return APIResult(G, res);
 }
@@ -1138,6 +1158,7 @@ static PyObject *CmdSceneOrder(PyObject * self, PyObject * args)
 
   auto result = MovieSceneOrder(G, std::move(names), sort, location);
 
+  SessionDirty(G);
   APIExitBlocked(G);
   return APIResult(G, result);
 }
@@ -1263,6 +1284,7 @@ static PyObject *CmdSculptIterate(PyObject * self, PyObject * args)
   }
   if(ok && (ok = APIEnterNotModal(G))) {
     total_strain = ExecutiveSculptIterate(G, str1, int1, int2);
+    SessionDirty(G);
     APIExit(G);
   }
   return PyFloat_FromDouble((double) total_strain);
@@ -1284,6 +1306,7 @@ static PyObject *CmdSetObjectTTT(PyObject * self, PyObject * args)
                             &state, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSetObjectTTT(G, name, ttt, state, quiet, SettingGetGlobal_i(G, cSetting_movie_auto_store));
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1298,6 +1321,7 @@ static PyObject *CmdTranslateObjectTTT(PyObject * self, PyObject * args)
                             &mov[0], &mov[1], &mov[2]);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveTranslateObjectTTT(G, name, mov, SettingGetGlobal_i(G, cSetting_movie_auto_store), true);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1314,6 +1338,7 @@ static PyObject *CmdCombineObjectTTT(PyObject * self, PyObject * args)
   }
   API_ASSERT(APIEnterNotModal(G))
   auto result = ExecutiveCombineObjectTTT(G, name, ttt, false, -1);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1469,6 +1494,7 @@ static PyObject *CmdRampNew(PyObject * self, PyObject * args)
         pymol::vla_take_ownership(range_vla),
         pymol::vla_take_ownership(color_vla), state, sele, beyond, within,
         sigma, zero, calc_mode, quiet);
+    SessionDirty(G);
   }
   APIExit(G);
   return APIResult(G, result);
@@ -1515,6 +1541,7 @@ static PyObject * CmdMapGenerate(PyObject * self, PyObject * args)
 	" Cmd-Update: Finished ExecutiveMapGenerate."
       ENDFB(G);
     }
+    SessionDirty(G);
     APIExit(G);
   }
 
@@ -1544,6 +1571,7 @@ static PyObject *CmdMapNew(PyObject * self, PyObject * args)
   auto result = ExecutiveMapNew(G, name, type, grid, selection, buffer,
       minCorner, maxCorner, state, have_corners, quiet, zoom, normalize, floor,
       ceiling, resolution);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1564,6 +1592,7 @@ static PyObject *CmdMapSetBorder(PyObject * self, PyObject * args)
   }
   if(ok && (ok = APIEnterNotModal(G))) {
     ok = ExecutiveMapSetBorder(G, name, level, state);
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(ok);
@@ -1581,6 +1610,7 @@ static PyObject *CmdMapSet(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveMapSet(
       G, name, operator_, operands, target_state, source_state, zoom, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1596,6 +1626,7 @@ static PyObject *CmdMapTrim(PyObject * self, PyObject * args)
       &map_state, &sele_state, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveMapTrim(G, name, sele, buffer, map_state, sele_state, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1608,6 +1639,7 @@ static PyObject *CmdMapDouble(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osi", &self, &name, &state);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveMapDouble(G, name, state);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1621,6 +1653,7 @@ static PyObject *CmdMapHalve(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &name, &state, &smooth);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveMapHalve(G, name, state, smooth);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1724,6 +1757,7 @@ static PyObject *CmdTranslateAtom(PyObject * self, PyObject * args)
       &state, &mode, &log);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveTranslateAtom(G, str1, v, state, mode, log);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1742,6 +1776,7 @@ static PyObject *CmdMatrixCopy(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveMatrixCopy(G, source_name, target_name, source_mode,
       target_mode, source_state, target_state, target_undo, log, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -1757,6 +1792,7 @@ static PyObject *CmdResetMatrix(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osiiii", &self, &name, &mode, &state, &log, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveResetMatrix(G, name, mode, state, log, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1776,6 +1812,7 @@ static PyObject *CmdTransformObject(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveTransformObjectSelection(G, name,
                                                  state, sele, log, matrix, homo, true);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1794,6 +1831,7 @@ static PyObject *CmdTransformSelection(PyObject * self, PyObject * args)
   }
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveTransformSelection(G, state, sele, log, ttt, homo);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -1807,6 +1845,7 @@ static PyObject *CmdLoadColorTable(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osfi", &self, &str1, &gamma, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   bool ok = ColorTableLoad(G, str1, gamma, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResultOk(G, ok);
 }
@@ -1935,6 +1974,7 @@ static PyObject *CmdAlign(PyObject * self, PyObject * args)
       }
       SelectorFreeTmp(G, s2);
       SelectorFreeTmp(G, s3);
+      SessionDirty(G);
       APIExit(G);
     }
   }
@@ -1989,6 +2029,7 @@ static PyObject *CmdUSalign(PyObject * self, PyObject * args)
 
   SelectorFreeTmp(G, s1);
   SelectorFreeTmp(G, s2);
+  SessionDirty(G);
   APIExit(G);
 
   if (have_result) {
@@ -2135,6 +2176,7 @@ static PyObject *CmdSetView(PyObject * self, PyObject * args)
                             &quiet, &animate, &hand);
   API_ASSERT(APIEnterNotModal(G));
   SceneSetView(G, view, quiet, animate, hand);        /* TODO STATUS */
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APISuccess();
 }
@@ -2201,6 +2243,7 @@ static PyObject *CmdSetTitle(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osis", &self, &str1, &int1, &str2);
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveSetTitle(G, str1, int1, str2);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -2411,6 +2454,7 @@ static PyObject *CmdInvert(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oi", &self, &int1);
   API_ASSERT(APIEnterNotModal(G));
   auto res = EditorInvert(G, int1);
+  SessionDirty(G);
     APIExit(G);
   return APIResult(G, res);
 }
@@ -2422,6 +2466,7 @@ static PyObject *CmdTorsion(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Of", &self, &float1);
   API_ASSERT(APIEnterNotModal(G));
   auto result = EditorTorsion(G, float1);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -2454,6 +2499,7 @@ static PyObject *CmdMask(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &str1, &int1, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveMask(G, str1, int1, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -2467,6 +2513,7 @@ static PyObject *CmdProtect(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &str1, &int1, &int2);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveProtect(G, str1, int1, int2);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -2518,6 +2565,7 @@ static PyObject *CmdSetFeedbackMask(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveSetFeedbackMask(
       G, i1, static_cast<unsigned char>(i2), static_cast<unsigned char>(i3));
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -2538,6 +2586,7 @@ static PyObject *CmdPop(PyObject * self, PyObject * args)
   }
   if(ok && (ok = APIEnterNotModal(G))) {
     result = ExecutivePop(G, str1, str2, quiet);
+    SessionDirty(G);
     APIExit(G);
   } else
     result = -1;
@@ -2809,6 +2858,7 @@ static PyObject *CmdSetWizard(PyObject * self, PyObject * args)
     return APIFailure(G, "Invalid wizard.");
   }
   auto result = WizardSet(G, obj, replace);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -2823,6 +2873,7 @@ static PyObject *CmdSetWizardStack(PyObject * self, PyObject * args)
     return APIFailure(G, "Invalid wizard.");
   }
   auto result = WizardSetStack(G, obj);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -2935,6 +2986,7 @@ static PyObject *CmdIsomesh(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveIsomeshEtc(G, mesh_name, map_name, lvl, sele, fbuf, state,
       carve, map_state, quiet, mesh_mode, alt_lvl);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -2949,6 +3001,7 @@ static PyObject *CmdSliceNew(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossii", &self, &slice, &map, &state, &map_state);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSliceNew(G, slice, map, state, map_state);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -2971,6 +3024,7 @@ static PyObject *CmdIsosurface(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveIsosurfaceEtc(G, surf_name, map_name, lvl, sele, fbuf,
       state, carve, map_state, side, quiet, surf_mode);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -3004,6 +3058,7 @@ static PyObject *CmdSymExp(PyObject * self, PyObject * args)
     }
     if(mObj) {
       ExecutiveSymExp(G, str1, str2, str3, cutoff, segi, quiet);        /* TODO STATUS */
+      SessionDirty(G);
     }
     APIExit(G);
   }
@@ -3023,6 +3078,7 @@ static PyObject *CmdSymmetryCopy(PyObject * self, PyObject * args)
   auto res = ExecutiveSymmetryCopy(G,
 			  source_name, target_name,
 			  source_state, target_state, quiet);
+  SessionDirty(G);
     APIExit(G);
   return APIResult(G, res);
 }
@@ -3065,6 +3121,7 @@ static PyObject *CmdDist(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveDistance(G, name, str1,
       str2, mode, cutoff, labels, quiet, reset, state, zoom, state1, state2);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -3085,6 +3142,7 @@ static PyObject *CmdAngle(PyObject * self, PyObject * args)
   auto res =
       ExecutiveAngle(G, name, str1, str2, str3,
           mode, labels, reset, zoom, quiet, state, state1, state2, state3);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -3102,6 +3160,7 @@ static PyObject *CmdDihedral(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveDihedral(G, name,
       str1, str2, str3, str4, mode, labels, reset, zoom, quiet, state);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -3116,6 +3175,7 @@ static PyObject *CmdBond(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossiii|s", &self, &str1, &str2, &order, &mode, &quiet, &symop);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveBond(G, str1, str2, order, mode, quiet, symop);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -3131,6 +3191,7 @@ static PyObject* CmdAddBond(PyObject* self, PyObject* args)
 
   auto result = ExecutiveAddBondByIndices(G, oname, atm1, atm2, order);
 
+  SessionDirty(G);
   APIExitBlocked(G);
   return APIResult(G, result);
 }
@@ -3144,6 +3205,7 @@ static PyObject* CmdRebond(PyObject* self, PyObject* args)
   API_SETUP_ARGS(G, self, args, "Osi|i", &self, &oname, &state, &pbc);
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveRebond(G, oname, state, pbc);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -3159,6 +3221,7 @@ static PyObject *CmdRevalence(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveRevalence(
       G, sele1, sele2, source, target_state, source_state, reset, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -3227,6 +3290,7 @@ static PyObject *CmdVdwFit(PyObject * self, PyObject * args)
   }
   if(ok && (ok = APIEnterNotModal(G))) {
     ok = ExecutiveVdwFit(G, str1, state1, str2, state2, buffer, quiet);
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(ok);
@@ -3240,6 +3304,7 @@ static PyObject *CmdLabel(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossi", &self, &str1, &str2, &quiet);
   API_ASSERT(APIEnterBlockedNotModal(G));
   ExecutiveLabel(G, str1, str2, quiet, cExecutiveLabelEvalOn);
+  SessionDirty(G);
   APIExitBlocked(G);
   if (PyErr_Occurred()) {
     return nullptr;
@@ -3255,6 +3320,7 @@ static PyObject *CmdLabel2(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossi", &self, &str1, &str2, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveLabel(G, str1, str2, quiet, cExecutiveLabelEvalAlt);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -3289,6 +3355,7 @@ static PyObject *CmdAlterList(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "OsOiO", &self, &str1, &list, &quiet, &space);
   API_ASSERT(APIEnterBlockedNotModal(G));
   auto result = ExecutiveIterateList(G, str1, list, false, quiet, space);
+  SessionDirty(G);
   APIExitBlocked(G);
   return APIResult(G, result);
 }
@@ -3335,6 +3402,7 @@ static PyObject *CmdCopy(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossi", &self, &str1, &str2, &zoom);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveCopy(G, str1, str2, zoom);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4007,6 +4075,7 @@ static PyObject *CmdCreate(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveSeleToObject(G, str1,
       str2, source, target, discrete, zoom, quiet, singletons, copy_properties);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -4021,6 +4090,7 @@ static PyObject *CmdOrient(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osif", &self, &str1, &state, &animate);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveOrient(G, str1, state, animate, false, 0.0F, quiet);
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4033,6 +4103,7 @@ static PyObject *CmdFitPairs(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "OOi", &self, &list, &quiet);
   API_ASSERT(APIEnterBlockedNotModal(G));
   auto result = ExecutiveFitPairs(G, list, quiet);
+  SessionDirty(G);
   APIExitBlocked(G);
   return APIResult(G, result);
 }
@@ -4049,6 +4120,7 @@ static PyObject *CmdIntraFit(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osiiii|i", &self, &str1, &state, &mode, &quiet, &mix, &pbc);
   API_ASSERT(APIEnterNotModal(G));
   auto fVLA = ExecutiveRMSStates(G, str1, state, mode, quiet, mix, pbc);
+  SessionDirty(G);
   APIExit(G);
   PyObject* result = nullptr;
   if(fVLA) {
@@ -4102,6 +4174,7 @@ static PyObject *CmdUpdate(PyObject * self, PyObject * args)
       &matchmaker, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveUpdateCmd(G, str1, str2, int1, int2, matchmaker, quiet); 
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4194,6 +4267,7 @@ static PyObject *CmdSetDihe(PyObject * self, PyObject * args)
       &float1, &int1, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSetDihe(G, str1, str2, str3, str4, float1, int1, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4461,6 +4535,7 @@ static PyObject *CmdReset(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Os", &self, &obj);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveReset(G, obj);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4633,6 +4708,7 @@ static PyObject *CmdMDo(PyObject * self, PyObject * args)
     } else {
       MovieSetCommand(G, frame, cmd);
     }
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(ok);
@@ -4671,6 +4747,7 @@ static PyObject *CmdMMatrix(PyObject * self, PyObject * args)
   }
   if(ok && (ok = APIEnterNotModal(G))) {
     ok = MovieMatrix(G, cmd);
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(ok);
@@ -4868,6 +4945,7 @@ static PyObject *CmdMSet(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &str1, &start_from,&freeze);
   API_ASSERT(APIEnterNotModal(G));
   MovieSet(G, str1, start_from, freeze);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -4883,6 +4961,7 @@ static PyObject *CmdMModify(PyObject * self, PyObject * args)
   auto result =
       ExecutiveMotionViewModify(G, static_cast<ViewElemAction>(action), index,
           count, target, object, freeze, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4907,6 +4986,7 @@ static PyObject *CmdMView(PyObject * self, PyObject * args)
     ok = ExecutiveMotionView(G, static_cast<MViewAction>(action), first, last,
         power, bias, simple, linear, object, wrap, hand, window, cycles,
         scene_name, scene_cut, state, quiet, autogen);
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(ok);
@@ -4984,6 +5064,7 @@ static PyObject *CmdFlag(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oisii", &self, &flag, &str1, &action, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveFlag(G, flag, str1, action, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -4998,6 +5079,7 @@ static PyObject *CmdColor(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossii", &self, &color, &str1, &flags, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveColorFromSele(G, str1, color, flags, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5012,6 +5094,7 @@ static PyObject *CmdColorDef(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osfffii", &self, &color, v, v + 1, v + 2, &mode, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   ColorDef(G, color, v, mode, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -5073,6 +5156,7 @@ static PyObject *CmdClip(PyObject * self, PyObject * args)
     SelectorTmp2 s1(G, str1);
     result = SceneClipFromMode(G, sname, dist, s1.getName(), state);
   }
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5095,6 +5179,7 @@ static PyObject *CmdMove(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osf", &self, &sname, &dist);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveMove(G, sname, dist);
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5107,6 +5192,7 @@ static PyObject *CmdTurn(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osf", &self, &sname, &angle);
   API_ASSERT(APIEnterNotModal(G));
   SceneRotateAxis(G, angle, sname[0]);
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APISuccess();
 }
@@ -5122,6 +5208,7 @@ static PyObject *CmdUnset(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oisiii", &self, &index, &str, &state, &quiet, &updates);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveUnsetSetting(G, index, str, state, quiet, updates);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5145,6 +5232,7 @@ static PyObject *CmdUnsetBond(PyObject * self, PyObject * args)
     p_return_if_error(tmpsele2);
     ExecutiveUnsetBondSetting(G, index, tmpsele1->getName(),
         tmpsele2->getName(), state, quiet, updates);
+    SessionDirty(G);
     return {};
   }();
   APIExit(G);
@@ -5190,6 +5278,7 @@ static PyObject *CmdSetBond(PyObject * self, PyObject * args)
             tmpsele2->getName(), state, quiet, updates)) {
       return pymol::Error();
     }
+    SessionDirty(G);
     return {};
   }();
   APIExit(G);
@@ -5242,6 +5331,7 @@ static PyObject *CmdDeleteStates(PyObject * self, PyObject * args)
   PConvFromPyObject(G, statesPyList, states);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveDeleteStates(G, objName, states);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5254,6 +5344,7 @@ static PyObject *CmdCartoon(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osi", &self, &sname, &type);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveCartoon(G, type, sname);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5276,6 +5367,7 @@ static PyObject *CmdShowHide(PyObject * self, PyObject * args)
     auto tmpsele1 = SelectorTmp2::make(G, sname);
     if (tmpsele1) {
       ExecutiveSetRepVisMask(G, tmpsele1->getName(), rep, state);
+      SessionDirty(G);
     } else {
       res = tmpsele1.error_move();
     }
@@ -5292,6 +5384,7 @@ static PyObject *CmdOnOffBySele(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osi", &self, &sname, &onoff);
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveSetOnOffBySele(G, sname, onoff);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -5305,6 +5398,7 @@ static PyObject *CmdOnOff(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &name, &state, &parents);
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveSetObjVisib(G, name, state, parents);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -5317,6 +5411,7 @@ static PyObject *CmdToggle(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osi", &self, &sname, &rep);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveToggleRepVisib(G, sname, rep);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5371,6 +5466,7 @@ static PyObject *CmdGroup(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   {
     ok = ExecutiveGroup(G, gname, names, action, quiet);
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(G, ok);
@@ -5432,6 +5528,7 @@ static PyObject *CmdLoadObject(PyObject * self, PyObject * args)
       &type, &finish, &discrete, &quiet, &zoom);
   API_ASSERT(APIEnterNotModal(G));
   ExecutiveLoadObject(G, oname, model, frame, type, finish, discrete, quiet, zoom);
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -5474,6 +5571,7 @@ static PyObject *CmdSetStateOrder(PyObject * self, PyObject * args)
     ok_raise(2);
   }
 
+  SessionDirty(G);
   APIExit(G);
   return APIResultOk(ok);
 ok_except2:
@@ -5511,6 +5609,7 @@ static PyObject *CmdLoadCoords(PyObject * self, PyObject * args)
     return nullptr;
   }
 
+  SessionDirty(G);
   return APIResult(G, result);
 }
 
@@ -5525,6 +5624,7 @@ static PyObject *CmdLoadCoordSet(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "OsOii", &self, &oname, &model, &frame, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveLoadCoordset(G, oname, model, frame, static_cast<bool>(quiet));
+  SessionDirty(G);
   APIExit(G);
   return APISuccess();
 }
@@ -5559,6 +5659,7 @@ static PyObject *CmdLoad(PyObject * self, PyObject * args)
                          object_props, atom_props, mimic);
 
   OrthoRestorePrompt(G);
+  SessionDirty(G);
   APIExit(G);
   
   return APIResult(G, result);
@@ -5580,6 +5681,7 @@ static PyObject *CmdLoadTraj(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveLoadTraj(G, oname, fname, frame, type,
       interval, average, start, stop, max, str1, image, shift, plugin, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5593,6 +5695,7 @@ static PyObject *CmdOrigin(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oss(fff)i", &self, &str1, &obj, v, v + 1, v + 2, &state);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveOrigin(G, str1, 1, obj, v, state);
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5604,6 +5707,7 @@ static PyObject *CmdSort(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Os", &self, &name);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSort(G, name);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5621,6 +5725,7 @@ static PyObject *CmdAssignSS(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result =
       ExecutiveAssignSS(G, str1, state, str2, preserve, nullptr, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5636,6 +5741,7 @@ static PyObject *CmdSpheroid(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osi", &self, &name, &average);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSpheroid(G, name, average);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5686,6 +5792,7 @@ static PyObject *CmdCenter(PyObject * self, PyObject * args)
       res = tmpsele1.error_move();
     }
   }
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -5731,6 +5838,7 @@ static PyObject *CmdZoom(PyObject * self, PyObject * args)
     SelectorTmp2 s1(G, str1);
     ExecutiveWindowZoom(G, s1.getName(), buffer, state, inclusive, animate, quiet);
   }
+  SessionDirty(G, SESSION_DIRTY_VIEW);
   APIExit(G);
   return APISuccess();
 }
@@ -5746,6 +5854,7 @@ static PyObject *CmdIsolevel(PyObject * self, PyObject * args)
   if(!query) {
     API_ASSERT(APIEnterNotModal(G));
     auto result = ExecutiveIsolevel(G, name, level, state, quiet);
+    SessionDirty(G);
     APIExit(G);
     return APIResult(G, result);
   } else {
@@ -5766,6 +5875,7 @@ static PyObject *CmdHAdd(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osiii", &self, &str1, &quiet, &state, &legacy);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveAddHydrogens(G, str1, quiet, state, legacy);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5778,6 +5888,7 @@ static PyObject *CmdSetObjectColor(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Ossi", &self, &name, &color, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSetObjectColor(G, name, color, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5813,6 +5924,7 @@ static PyObject *CmdRemovePicked(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oii", &self, &i1, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = EditorRemove(G, i1, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5824,6 +5936,7 @@ static PyObject *CmdHFill(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oi", &self, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = EditorHFill(G, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5840,6 +5953,7 @@ static PyObject *CmdHFix(PyObject * self, PyObject * args)
     SelectorTmp2 s1(G, str1);
     result = EditorHFix(G, s1.getName(), quiet);
   }
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5851,6 +5965,7 @@ static PyObject *CmdCycleValence(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Oi", &self, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = EditorCycleValence(G, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5864,6 +5979,7 @@ static PyObject *CmdReplace(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osiisi", &self, &str1, &i1, &i2, &str2, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = EditorReplace(G, str1, i1, i2, str2, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5876,6 +5992,7 @@ static PyObject *CmdSetGeometry(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &sele, &geom, &valence);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveSetGeometry(G, sele, geom, valence);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5890,6 +6007,7 @@ static PyObject *CmdAttach(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osiis", &self, &str1, &i1, &i2, &name, &quiet);
   API_ASSERT(APIEnterNotModal(G));
   auto result = EditorAttach(G, str1, i1, i2, name, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5906,6 +6024,7 @@ static PyObject *CmdFuse(PyObject * self, PyObject * args)
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveFuse(
       G, str1, str2, mode, recolor, move_flag);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5935,6 +6054,7 @@ static PyObject *CmdEdit(PyObject * self, PyObject * args)
   } else {
     result = EditorSelect(G, str0, str1, str2, str3, pkresi, pkbond, quiet);
   }
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5960,6 +6080,7 @@ static PyObject *CmdDrag(PyObject * self, PyObject * args)
       ok = ExecutiveSetDrag(G, s0, quiet,mode);
       SelectorFreeTmp(G, s0);
     }
+    SessionDirty(G);
     APIExit(G);
   }
   return APIResultOk(ok);
@@ -5974,6 +6095,7 @@ static PyObject *CmdRename(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &str1, &int1, &int2);
   API_ASSERT(APIEnterNotModal(G));
   auto result = ExecutiveRenameObjectAtoms(G, str1, int1, int2);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -5987,6 +6109,7 @@ static PyObject *CmdOrder(PyObject * self, PyObject * args)
   API_SETUP_ARGS(G, self, args, "Osii", &self, &str1, &int1, &int2);
   APIEnterNotModal(G);
   auto result = ExecutiveOrder(G, str1, int1, int2);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, result);
 }
@@ -6127,6 +6250,7 @@ static PyObject *CmdVolume(PyObject *self, PyObject *args)
   API_ASSERT(APIEnterNotModal(G));
   auto res = ExecutiveVolume(G, volume_name, map_name, lvl, sele, fbuf, state,
       carve, map_state, quiet);
+  SessionDirty(G);
   APIExit(G);
   return APIResult(G, res);
 }
@@ -6250,6 +6374,7 @@ static PyObject *CmdSetDiscrete(PyObject * self, PyObject * args)
         status = ObjectMoleculeSetDiscrete(G, obj, discrete);
       }
 
+      SessionDirty(G);
       APIExitBlocked(G);
     }
   }
@@ -6376,6 +6501,7 @@ static PyMethodDef Cmd_methods[] = {
   {"_pushValidContext", CmdPushValidContext, METH_VARARGS},
   {"_reshape", Cmd_Reshape, METH_VARARGS},
   {"_getRedisplay", Cmd_GetRedisplay, METH_VARARGS},
+  {"_getSessionDirty", CmdSessionGetDirty, METH_VARARGS},
   {"_draw", Cmd_Draw, METH_VARARGS},
   {"_button", Cmd_Button, METH_VARARGS},
   {"_drag", Cmd_Drag, METH_VARARGS},

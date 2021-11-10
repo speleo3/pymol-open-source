@@ -80,6 +80,7 @@
 #include "Seeker.h"
 #include "Selector.h"
 #include "Seq.h"
+#include "Session.h"
 #include "Setting.h"
 #include "SpecRec.h"
 #include "TTT.h"
@@ -4968,6 +4969,8 @@ pymol::Result<std::pair<float, float>> ExecutiveSpectrum(PyMOLGlobals* G,
         ExecutiveObjMolSeleOp(G, sele1, &op);
       }
     }
+
+    SessionDirty(G);
   }
   return ret;
 }
@@ -10219,6 +10222,7 @@ pymol::Result<int> ExecutiveIterate(PyMOLGlobals* G, const char* str1,
     }
     if (!read_only) {
       SeqChanged(G);
+      SessionDirty(G);
     }
   } else {
     if (!quiet) {
@@ -10488,6 +10492,7 @@ pymol::Result<int> ExecutiveIterateState(PyMOLGlobals* G, int state,
       // for dynamic_measures
       ExecutiveUpdateCoordDepends(G, nullptr);
       SeqChanged(G);
+      SessionDirty(G);
     }
     if (!quiet) {
       if (!read_only) {
@@ -11124,6 +11129,7 @@ int ExecutiveRMS(PyMOLGlobals* G, const char* s1, const char* s2, int mode,
               ExecutiveManageObject(G, obj, 0, quiet);
               align_to_update = obj;
               SceneInvalidate(G);
+              SessionDirty(G);
             }
           }
         }
@@ -11170,6 +11176,7 @@ int ExecutiveRMS(PyMOLGlobals* G, const char* s1, const char* s2, int mode,
             op2.code = OMOP_TTTF;
             ExecutiveObjMolSeleOp(G, sele1, &op2);
           }
+          SessionDirty(G);
         }
       }
     } else {
