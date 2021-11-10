@@ -36,6 +36,7 @@ Z* -------------------------------------------------------------------
 #include "PConv.h"
 #include "Scene.h"
 #include "Selector.h"
+#include "Session.h"
 #include "Setting.h"
 #include "Util.h"
 #include "Util2.h"
@@ -2401,6 +2402,7 @@ void EditorDrag(PyMOLGlobals* G, pymol::CObject* obj, int index, int mode,
     }
     ExecutiveInvalidateSelectionIndicatorsCGO(G);
     EditorInvalidateShaderCGO(G);
+    SessionDirty(G);
   }
   PRINTFD(G, FB_Editor)
   " EditorDrag-Debug: leaving...\n" ENDFD;
