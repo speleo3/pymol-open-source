@@ -332,11 +332,17 @@ class PropsDialog(QtWidgets.QWidget):
         index = self.form.input_index.value()
 
         if model and index:
+            suspended = self.cmd.get_setting_boolean('suspend_undo')
             try:
+                if not suspended:
+                    self.cmd.set('suspend_undo', True, updates=False)
                 self.cmd.edit((model, index))
                 return True
             except pymol.CmdException:
                 pass
+            finally:
+                if not suspended:
+                    self.cmd.set('suspend_undo', False, updates=False)
 
         return False
 

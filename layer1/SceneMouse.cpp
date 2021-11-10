@@ -15,6 +15,7 @@
 #include "ScenePicking.h"
 #include "Selector.h"
 #include "Seq.h"
+#include "Session.h"
 #include "Wizard.h"
 #include "Feedback.h"
 #include "Util2.h"
@@ -1304,6 +1305,7 @@ void SceneDrag(Block* block, int x, int y, int mod, double when)
   }
 
   if (!drag_handled) {
+    auto session_dirty_mask = SESSION_DIRTY_VIEW;
 
     mode = ButModeTranslate(G, I->Button, mod);
 
@@ -1718,6 +1720,8 @@ void SceneDrag(Block* block, int x, int y, int mod, double when)
           default:
             break;
           }
+
+        session_dirty_mask = SESSION_DIRTY_ALL;
       }
       I->LastX = x;
       I->LastY = y;
@@ -2024,6 +2028,8 @@ void SceneDrag(Block* block, int x, int y, int mod, double when)
       if (moved_flag)
         SceneDoRoving(G, old_front, old_back, old_origin, adjust_flag, false);
     }
+
+    SessionDirty(G, session_dirty_mask);
   }
   if (I->PossibleSingleClick) {
     int max_single_click_drag = 4;
