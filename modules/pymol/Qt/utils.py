@@ -275,6 +275,9 @@ def loadUi(uifile, widget):
     if PYQT_NAME.startswith('PyQt'):
         m = __import__(PYQT_NAME + '.uic')
         return m.uic.loadUi(uifile, widget)
+    if PYQT_NAME == 'PySide6':
+        from PySide6.QtUiTools import QUiLoader
+        return QUiLoader().load(uifile, widget)
     elif PYQT_NAME == 'PySide2':
         try:
             import pyside2uic as pysideuic
