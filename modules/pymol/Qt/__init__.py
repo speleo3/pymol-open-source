@@ -39,6 +39,24 @@ if not PYQT_NAME and qt_api in ('', 'pyside2'):
         if DEBUG:
             print('import PySide2 failed')
 
+if not PYQT_NAME and qt_api in ('', 'pyqt6'):
+    try:
+        from PyQt6 import QtGui, QtCore, QtOpenGL, QtWidgets
+        from PyQt6 import QtOpenGLWidgets
+        PYQT_NAME = 'PyQt6'
+    except ImportError:
+        if DEBUG:
+            print('import PyQt6 failed')
+
+if not PYQT_NAME and qt_api in ('', 'pyside6'):
+    try:
+        from PySide6 import QtGui, QtCore, QtOpenGL, QtWidgets
+        from PySide6 import QtOpenGLWidgets
+        PYQT_NAME = 'PySide6'
+    except ImportError:
+        if DEBUG:
+            print('import PySide6 failed')
+
 if not PYQT_NAME and qt_api in ('', 'pyqt4'):
     try:
         try:
@@ -73,6 +91,21 @@ if hasattr(QtCore, 'QAbstractProxyModel'):
     QtCoreModels = QtCore
 else:
     QtCoreModels = QtGui
+
+if PYQT_NAME.endswith('6'):
+    QtWidgets.QOpenGLWidget = QtOpenGLWidgets.QOpenGLWidget
+    QtWidgets.QActionGroup = QtGui.QActionGroup
+    QtWidgets.QAction = QtGui.QAction
+    QtWidgets.QShortcut = QtGui.QShortcut
+    QtCore.QSortFilterProxyModel.setFilterRegExp = QtCore.QSortFilterProxyModel.setFilterRegularExpression
+    QtGui.QFont.Monospace = QtGui.QFont.StyleHint.Monospace
+    QtGui.QFont.Bold = QtGui.QFont.Weight.Bold
+
+    if PYQT_NAME == 'PySide6':
+        QtCore.Qt.MidButton = QtCore.Qt.MiddleButton
+    else:
+        QtCore.Qt.MidButton = QtCore.Qt.MouseButton.MiddleButton
+        QtCore.QEvent.Gesture = QtCore.QEvent.Type.Gesture
 
 if PYQT_NAME == 'PyQt4':
     QFileDialog = QtWidgets.QFileDialog

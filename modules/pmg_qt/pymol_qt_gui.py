@@ -753,6 +753,12 @@ PyMOL> color ye<TAB>    (will autocomplete "yellow")
             with PopupOnException():
                 _copy_image(self.cmd, False, form.input_dpi.currentText())
 
+        try:
+            form.input_units.currentTextChanged.connect(lambda s: form.input_height_units.setSuffix(s))
+            form.input_units.currentTextChanged.connect(lambda s: form.input_width_units.setSuffix(s))
+        except AttributeError as e:
+            print(e)
+
         dpi = self.cmd.get_setting_int('image_dots_per_inch')
         if dpi > 0:
             form.input_dpi.setEditText(str(dpi))
