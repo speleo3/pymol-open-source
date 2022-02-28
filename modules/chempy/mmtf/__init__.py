@@ -2,6 +2,8 @@
 Experimental MMTF (Macromolecular Transmission Format) support
 '''
 
+from simplemmtf import MmtfDict
+
 as_str = lambda s: s if isinstance(s, str) else s.decode("utf-8")
 
 #####################################################################
@@ -141,7 +143,9 @@ def _to_chempy(data, use_auth=True):
 
 #####################################################################
 
-from .io import MmtfReader
-MmtfReader.to_chempy = _to_chempy
+
+class MmtfReader(MmtfDict):
+    to_chempy = _to_chempy
+
 
 #####################################################################
