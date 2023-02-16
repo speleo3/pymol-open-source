@@ -36,10 +36,15 @@ uniform float ambient_occlusion_scale;
 uniform int accessibility_mode;
 uniform float accessibility_mode_on;
 
+uniform vec4 clipPlane0;
+varying float clipCheck0;
+
 void main()
 {
   NORMAL = normalize(g_NormalMatrix * a_Normal);
   vec3 eye_pos = vec3(g_ModelViewMatrix * a_Vertex);
+
+  clipCheck0 = dot(vec4(eye_pos, 1.0), clipPlane0);
 
 #ifdef PYMOL_WEBGL_IOS
   gl_PointSize = g_PointSize;

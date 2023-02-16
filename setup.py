@@ -415,6 +415,7 @@ if not (MAC or WIN):
         libs += [
             "GL",
             "GLEW",
+            "GLU",
         ] + (not options.no_glut) * [
             "glut",
         ]

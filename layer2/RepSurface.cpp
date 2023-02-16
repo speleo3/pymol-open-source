@@ -41,6 +41,7 @@ Z* -------------------------------------------------------------------
 #include"ShaderMgr.h"
 #include"Rep.h"
 #include"CoordSet.h"
+#include"PolylinesTesselator.h"
 
 #ifdef NT
 #undef NT
@@ -1234,6 +1235,9 @@ static int RepSurfaceCGOGenerate(RepSurface * I, RenderInfo * info)
         }
       }
       if(ok && SettingGetGlobal_i(G, cSetting_surface_debug)) {
+        PRINTFB(G, FB_RepSurface, FB_Details)
+          " surface_debug: %d tri, %d vert\n", I->NT, I->N ENDFB(G);
+
         t = I->T;
         c = I->NT;
 	    if(c) {
@@ -1416,6 +1420,32 @@ static int RepSurfaceCGOGenerate(RepSurface * I, RenderInfo * info)
   return ok;
 }
 
+static
+void RepSurfaceClipCap(RepSurface* I, float clip_z, RenderInfo* info)
+{
+  auto coloridx = I->setting_get<int>(cSetting_clip_surface_color);
+  if (coloridx == -1) {
+    return;
+  }
+
+  auto cgo = SurfaceZIntersection(I->G, I->V, I->T, I->NT, clip_z,
+      I->setting_get<const float*>(cSetting_clip_surface_direction));
+
+  if (!cgo) {
+    return;
+  }
+
+  const float* color = ColorGet(I->G, coloridx);
+
+  if (info->ray) {
+    CGORenderRay(cgo.get(), info->ray, info, color, nullptr,
+        I->cs->Setting.get(), I->obj->Setting.get());
+  } else {
+    CGORender(
+        cgo.get(), color, I->cs->Setting.get(), I->obj->Setting.get(), info, I);
+  }
+}
+
 void RepSurface::render(RenderInfo* info)
 {
   auto I = this;
@@ -1443,6 +1473,13 @@ void RepSurface::render(RenderInfo* info)
 
   if((I->Type != 1) && (!s)) {
     return;
+  }
+
+  float clip_value = -(SceneGetCurrentFrontSafe(G) + R_SMALL4);
+  if (I->setting_get<bool>(cSetting_clip_surface)) {
+    clip_value = std::min(
+        clip_value, I->setting_get<float>(cSetting_clip_surface_value) +
+                        G->Scene->getSceneView().pos()[2]);
   }
 
   alpha = SettingGet_f(G, cs->Setting.get(), obj->Setting.get(), cSetting_transparency);
@@ -1481,6 +1518,8 @@ void RepSurface::render(RenderInfo* info)
         }
     } else if((I->Type == 0) || (I->Type == 3) || (I->Type == 4) || (I->Type == 5)) {   /* solid surface */
       c = I->NT;
+
+      RepSurfaceClipCap(I, clip_value, info);
 
       if(I->oneColorFlag) {
         float col[3], col1[3], col2[3], col3[3];
@@ -1654,9 +1693,11 @@ void RepSurface::render(RenderInfo* info)
           ok &= RepSurfaceCGOGenerate(I, info);
         }
 
+        RepSurfaceClipCap(I, clip_value, info);
+
         if (ok && I->shaderCGO) {
           const float *color = ColorGet(G, obj->Color);
-          CGORender(I->shaderCGO, color, NULL, NULL, info, I);
+          CGORender(I->shaderCGO, color, cs->Setting.get(), obj->Setting.get(), info, I);
           return;
         }
 

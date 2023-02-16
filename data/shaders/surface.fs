@@ -17,6 +17,7 @@ uniform bool lighting_enabled;
 uniform bool two_sided_lighting_enabled;
 uniform vec4 interior_color;
 uniform bool use_interior_color;
+varying float clipCheck0;
 
 #include anaglyph_header.fs
 #include compute_fog_color.fs
@@ -24,6 +25,9 @@ uniform bool use_interior_color;
 
 void main()
 {
+  if (clipCheck0 > 0.0)
+    discard;
+
   if (isPicking){
     gl_FragColor = COLOR; // no lighting
   } else {

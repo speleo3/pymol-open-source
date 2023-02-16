@@ -1512,7 +1512,7 @@ static void CGO_gl_enable(CCGORenderer* I, CGO_op_data pc)
         break;
       case GL_SURFACE_SHADER:
         shaderMgr->Enable_SurfaceShader(
-            I->info ? I->info->pass : RenderPass::Antialias);
+            I->info ? I->info->pass : RenderPass::Antialias, I->set1, I->set2);
         break;
       case GL_CYLINDER_SHADER:
         shaderMgr->Enable_CylinderShader(

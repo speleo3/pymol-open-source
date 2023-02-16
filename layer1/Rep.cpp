@@ -208,3 +208,14 @@ RepIterator::RepIterator(PyMOLGlobals * G, int rep_) {
     rep = rep_ - 1;
   }
 }
+
+template <typename V> V Rep::setting_get(int index) const
+{
+  return SettingGet<V>(
+      G, cs ? cs->Setting.get() : nullptr, obj->Setting.get(), index);
+}
+
+template bool           Rep::setting_get(int index) const;
+template int            Rep::setting_get(int index) const;
+template float          Rep::setting_get(int index) const;
+template const float *  Rep::setting_get(int index) const;

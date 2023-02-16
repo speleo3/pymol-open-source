@@ -220,7 +220,7 @@ public:
 
   CShaderPrg *Enable_DefaultShader(RenderPass pass);
   CShaderPrg *Enable_LineShader(RenderPass pass);
-  CShaderPrg *Enable_SurfaceShader(RenderPass pass);
+  CShaderPrg *Enable_SurfaceShader(RenderPass pass, const CSetting * set1, const CSetting * set2);
   CShaderPrg *Enable_DefaultShaderWithSettings(const CSetting * set1, const CSetting * set2, RenderPass pass);
   CShaderPrg *Enable_CylinderShader(const char *, RenderPass pass);
   CShaderPrg *Enable_CylinderShader(RenderPass pass);

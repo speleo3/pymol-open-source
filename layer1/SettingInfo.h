@@ -896,6 +896,11 @@ enum {
   REC_i( 786, cartoon_smooth_cylinder_window          , global    , 2 ),
   REC_i( 787, isosurface_algorithm                    , global    , 0, 0, 2 ),
   REC_b( 788, cell_centered                           , global    , false ),
+  REC_f( 789, clip_surface_value                      , ostate    , 0.f ),
+  REC_3( 790, clip_surface_direction                  , ostate    , 0.f, 0.f, 1.f ),
+  REC_c( 791, clip_surface_color                      , ostate    , "gray" ),
+  REC_f( 792, clip_surface_transparency               , ostate    , 0.f ),
+  REC_b( 793, clip_surface                            , ostate    , 0 ),
 
 
 #ifdef SETTINGINFO_IMPLEMENTATION

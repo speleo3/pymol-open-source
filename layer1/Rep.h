@@ -216,6 +216,9 @@ struct Rep {
   //! Sets the hasTransparency() flag.
   void setHasTransparency(bool has = true) { m_has_transparency = has; }
 
+  // convenience methods
+  template <typename T> T setting_get(int index) const;
+
 protected:
   cRepInv_t MaxInvalid = cRepInvNone;
 

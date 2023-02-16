@@ -1030,9 +1030,11 @@ CShaderPrg *CShaderMgr::Enable_LineShader(RenderPass pass){
   return Setup_DefaultShader(shaderPrg, nullptr, nullptr);
 }
 
-CShaderPrg *CShaderMgr::Enable_SurfaceShader(RenderPass pass){
+CShaderPrg *CShaderMgr::Enable_SurfaceShader(RenderPass pass,
+    const CSetting *set1,
+    const CSetting *set2) {
   CShaderPrg * shaderPrg = Get_SurfaceShader(pass);
-  return Setup_DefaultShader(shaderPrg, nullptr, nullptr);
+  return Setup_DefaultShader(shaderPrg, set1, set2);
 }
 
 CShaderPrg *CShaderMgr::Enable_ConnectorShader(RenderPass pass){
@@ -1094,6 +1096,26 @@ CShaderPrg *CShaderMgr::Setup_DefaultShader(CShaderPrg * shaderPrg,
 
   shaderPrg->Set_Specular_Values();
   shaderPrg->Set_Matrices();
+
+  float clipPlane0[] = {0.f, 0.f, 1.f, 0.f};
+
+  if (SettingGet<bool>(G, set1, set2, cSetting_clip_surface)) {
+    auto clip = G->Scene->getSceneView().pos()[2] +
+                SettingGet<float>(G, set1, set2, cSetting_clip_surface_value);
+
+    copy3f(SettingGet_3fv(G, set1, set2, cSetting_clip_surface_direction),
+        clipPlane0);
+
+    // TODO why -1 for x/y ?
+    clipPlane0[0] *= -1;
+    clipPlane0[1] *= -1;
+    clipPlane0[3] = -clip;
+  } else {
+    clipPlane0[3] = SceneGetCurrentFrontSafe(G);
+  }
+
+  shaderPrg->Set4fv("clipPlane0", clipPlane0);
+
   return (shaderPrg);
 }
 CShaderPrg *CShaderMgr::Enable_CylinderShader(RenderPass pass){

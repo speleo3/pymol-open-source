@@ -5372,7 +5372,7 @@ int CGORenderRay(CGO * I, CRay * ray, RenderInfo * info, const float *color, Obj
   float widthscale = 0.15F;
   float lineradius, dotradius, dotwidth;
   float white[] = { 1.0, 1.0, 1.0 };
-  float zee[] = { 0.0, 0.0, 1.0 };
+  const float* zee = I->G->Scene->ViewNormal;
   int ok = true;
   const float *n0 = NULL, *n1 = NULL, *n2 = NULL, *v0 = NULL, *v1 = NULL, *v2 = NULL, *c0 =
     NULL, *c1 = NULL, *c2 = NULL;
