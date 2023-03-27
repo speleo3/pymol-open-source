@@ -224,6 +224,7 @@ from .editing import \
       protonate,          \
       push_undo,          \
       rebond,             \
+      rebond_components,  \
       reference,          \
       redo,               \
       remove,             \
