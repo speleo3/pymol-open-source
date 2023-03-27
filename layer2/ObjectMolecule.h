@@ -477,6 +477,10 @@ bool ObjectMoleculeConnect(ObjectMolecule* I, int& nbond, pymol::vla<BondType>& 
  */
 void ObjectMoleculeConnectDiscrete(ObjectMolecule* I, int bondSearchMode,
                                    int connectModeOverride, bool pbc = false);
+
+bool ObjectMoleculeConnectComponents(
+    ObjectMolecule& I, float peptide_cutoff = 1.8);
+
 int ObjectMoleculeSetDiscrete(PyMOLGlobals * G, ObjectMolecule * I, int discrete);
 
 float ObjectMoleculeGetMaxVDW(ObjectMolecule * I);
