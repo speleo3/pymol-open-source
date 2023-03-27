@@ -220,6 +220,7 @@ from .editing import \
       protect,            \
       push_undo,          \
       rebond,             \
+      rebond_components,  \
       reference,          \
       redo,               \
       remove,             \

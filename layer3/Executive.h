@@ -799,6 +799,8 @@ int ExecutiveSaveUndo(PyMOLGlobals * G, const char *s1, int state);
 
 pymol::Result<> ExecutiveRebond(
     PyMOLGlobals* G, const char* oname, int state, bool pbc = false);
+pymol::Result<> ExecutiveRebondComponents(
+    PyMOLGlobals* G, const char* oname, float peptide_cutoff);
 
 /**
  * Determines whether the given name is of the Executive type (Selection or Object) provided

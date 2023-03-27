@@ -516,7 +516,7 @@ static void ConnectComponent(ObjectMolecule * I, int i_start, int i_end,
  * connecting bonds (C->N, O3*->P)
  */
 static int ObjectMoleculeConnectComponents(ObjectMolecule * I,
-    bond_dict_t * bond_dict=nullptr) {
+    bond_dict_t * bond_dict=nullptr, float peptide_cutoff = 1.8) {
 
   PyMOLGlobals * G = I->G;
   int i_start = 0;
@@ -561,7 +561,7 @@ static int ObjectMoleculeConnectComponents(ObjectMolecule * I,
         for (int i_prev : *i_prev_ptr) {
           bool alt_check = !atom.alt[0] || !I->AtomInfo[i_prev].alt[0] ||
                            atom.alt[0] == I->AtomInfo[i_prev].alt[0];
-          if (alt_check && GetDistance(I, i_prev, i) < 1.8) {
+          if (alt_check && GetDistance(I, i_prev, i) < peptide_cutoff) {
             // make bond
             ObjectMoleculeAddBond2(I, i_prev, i, 1);
           }
@@ -577,6 +577,11 @@ static int ObjectMoleculeConnectComponents(ObjectMolecule * I,
   VLASize(I->Bond, BondType, I->NBond);
 
   return true;
+}
+
+bool ObjectMoleculeConnectComponents(ObjectMolecule& I, float peptide_cutoff)
+{
+  return ObjectMoleculeConnectComponents(&I, nullptr, peptide_cutoff);
 }
 
 /**

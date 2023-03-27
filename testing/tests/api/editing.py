@@ -186,6 +186,20 @@ class TestEditing(testing.PyMOLTestCase):
         bonds = cmd.get_bonds('m1') # 0-indexed
         self.assertEqual(bonds, [(0, 1, 1), (1, 2, 1)])
 
+    @testing.requires_version('2.6')
+    def test_rebond_components(self):
+        cmd.fab("ACD", "m1")
+        cmd.alter("name *HB", "name = name[1:] + name [0]")
+        bonds_ref = sorted(cmd.get_bonds('m1'))
+        # add/remove some random bonds to show that it doesn't affect rebond_components
+        cmd.unbond("3/", "3/")
+        cmd.bond("2/CB", "1+3/CA")
+        # move atom far away to show that rebond_components is not distance based
+        cmd.alter_state(1, "1/CB", "x -= 5")
+        self.assertNotEqual(sorted(cmd.get_bonds("m1")), bonds_ref)
+        cmd.rebond_components('m1')
+        self.assertEqual(sorted(cmd.get_bonds("m1")), bonds_ref)
+
     def test_bond(self):
         cmd.pseudoatom('m1', pos=(0,0,0))
         cmd.pseudoatom('m1', pos=(1,0,0))

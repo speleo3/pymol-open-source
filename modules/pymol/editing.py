@@ -683,6 +683,24 @@ ARGUMENTS
         with _self.lockcm:
             return _cmd.rebond(_self._COb, oname, int(state) - 1, int(pbc))
 
+
+    def rebond_components(oname, cutoff=1.8, *, _self=cmd):
+        '''
+DESCRIPTION
+
+    Discard all bonds and do Chemical Component Dictionary based bonding. This
+    should be equivalent to connect_mode=4 when loading mmCIF.
+
+ARGUMENTS
+
+    oname = str: object name
+
+    cutoff = float: Distance cutoff for peptide bonds {default: 1.8}
+        '''
+        with _self.lockcm:
+            return _cmd.rebond_components(_self._COb, oname, float(cutoff))
+
+
     def bond(atom1="pk1", atom2="pk2", order=1, *, quiet=1, symop="", _self=cmd):
         '''
 DESCRIPTION

@@ -16694,6 +16694,28 @@ pymol::Result<> ExecutiveRebond(
   return {};
 }
 
+/**
+ * Discard all bonds and do distance based bonding.
+ * Implementation of `cmd.rebond_components()`
+ *
+ * @param oname object name
+ * @param peptide_cutoff distance cutoff for peptide bonds
+ */
+pymol::Result<> ExecutiveRebondComponents(
+    PyMOLGlobals* G, const char* oname, float peptide_cutoff)
+{
+  auto obj = ExecutiveFindObjectMoleculeByName(G, oname);
+  if (!obj) {
+    return pymol::make_error("cannot find object");
+  }
+
+  ObjectMoleculeRemoveBonds(obj, 0, 0);
+  ObjectMoleculeConnectComponents(*obj, peptide_cutoff);
+  obj->invalidate(cRepAll, cRepInvAll, -1);
+
+  return {};
+}
+
 bool ExecutiveIsSpecRecType(
     PyMOLGlobals* G, pymol::zstring_view name, ExecRec_t execType)
 {

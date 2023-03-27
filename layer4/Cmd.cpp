@@ -3156,6 +3156,19 @@ static PyObject* CmdRebond(PyObject* self, PyObject* args)
   return APIResult(G, res);
 }
 
+static PyObject* CmdRebondComponents(PyObject* self, PyObject* args)
+{
+  PyMOLGlobals* G = nullptr;
+  const char* oname;
+  float peptide_cutoff;
+  API_SETUP_ARGS(G, self, args, "Osf", &self, &oname, &peptide_cutoff);
+  API_ASSERT(APIEnterNotModal(G));
+  auto res = ExecutiveRebondComponents(G, oname, peptide_cutoff);
+  SessionDirty(G);
+  APIExit(G);
+  return APIResult(G, res);
+}
+
 static PyObject *CmdRevalence(PyObject * self, PyObject * args)
 {
   PyMOLGlobals *G = nullptr;
@@ -6375,6 +6388,7 @@ static PyMethodDef Cmd_methods[] = {
   {"bond", CmdBond, METH_VARARGS},
   {"add_bond", CmdAddBond, METH_VARARGS},
   {"rebond", CmdRebond, METH_VARARGS},
+  {"rebond_components", CmdRebondComponents, METH_VARARGS},
   {"busy_draw", CmdBusyDraw, METH_VARARGS},
   {"button", CmdButton, METH_VARARGS},
   /*  {"cache",                 CmdCache,                METH_VARARGS }, */
