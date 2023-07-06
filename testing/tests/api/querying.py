@@ -332,6 +332,13 @@ class TestQuerying(testing.PyMOLTestCase):
         cmd.ramp_new('ramp1', 'none')  # non-molecular object
         self.assertEqual(cmd.get_object_list(), ['gly', 'cys'])
         self.assertEqual(cmd.get_object_list('elem S'), ['cys'])
+        # empty list is a silent None
+        self.assertTrue(cmd.get_object_list('') is None)
+
+    @testing.requires_version('2.6')
+    def testGetObjectList__invalid_selection(self):
+        self.assertRaises(CmdException, cmd.get_object_list, 'invalid_selection_name')
+        self.assertRaises(CmdException, cmd.get_object_list, '(none')  # malformed
 
     @testing.requires_version('1.6')
     def testGetObjectMatrix(self):
