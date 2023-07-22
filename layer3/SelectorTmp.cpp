@@ -34,7 +34,7 @@ pymol::Result<SelectorTmp> SelectorTmp::make(
     PyMOLGlobals* G, const char* sele, bool empty_is_error)
 {
   if (empty_is_error && !sele[0]) {
-    return pymol::Error("Empty expression");
+    return pymol::Error::make<pymol::Error::SELECTOR>("Empty expression");
   }
 
   SelectorTmp self;

@@ -383,6 +383,7 @@ PyObject *P_setting = nullptr;     /* okay as global -- just used for names */
 PyObject *P_CmdException = nullptr;
 PyObject *P_QuietException = nullptr;
 PyObject *P_IncentiveOnlyException = nullptr;
+PyObject *P_SelectorException = nullptr;
 
 static PyMappingMethods wrapperMappingMethods, settingMappingMethods;
 static PyTypeObject Wrapper_Type = {
@@ -1982,6 +1983,7 @@ void PInit(PyMOLGlobals * G, int global_instance)
     P_CmdException = PGetAttrOrFatal(P_pymol, "CmdException");
     P_QuietException = PGetAttrOrFatal(P_cmd, "QuietException");
     P_IncentiveOnlyException = PGetAttrOrFatal(P_pymol, "IncentiveOnlyException");
+    P_SelectorException = PGetAttrOrFatal(P_pymol, "SelectorException");
 
     /* backwards compatibility */
 

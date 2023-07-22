@@ -66,6 +66,8 @@ Z* -------------------------------------------------------------------
 
 using SelectorInfoIter_t = decltype(CSelectorManager::Info)::iterator;
 
+#define make_selector_error pymol::Error::make<pymol::Error::SELECTOR>
+
 /**
  * Prefix for temporary selections.
  *
@@ -8082,7 +8084,7 @@ static pymol::Result<> SelectorSelect1(PyMOLGlobals * G, EvalElem * base, int qu
     obj = nullptr;
 
     if (state < 0 && state != cSelectorUpdateTableCurrentState) {
-      return pymol::make_error(
+      return make_selector_error(
           "state ", state + 1, " unsupported (must be -1 (current) or >=1)");
     } else {
       for(a = cNDummyAtoms; a < I_NAtom; a++) {
@@ -8314,7 +8316,7 @@ static pymol::Result<> SelectorSelect1(PyMOLGlobals * G, EvalElem * base, int qu
             for(a = cNDummyAtoms; a < I_NAtom; a++)
               base[0].sele[a] = false;
           } else {
-            return pymol::make_error("Invalid selection name \"", word, "\".");
+            return make_selector_error("Invalid selection name \"", word, "\".");
           }
         }
       }
@@ -8410,7 +8412,7 @@ static pymol::Result<> SelectorSelect1(PyMOLGlobals * G, EvalElem * base, int qu
             }
           }
         } else {
-          return pymol::make_error("invalid model \"", base[1].text(), "\"");
+          return make_selector_error("invalid model \"", base[1].text(), "\"");
         }
       }
     }
@@ -9584,7 +9586,7 @@ static std::string indicate_last_token(
 }
 
 #define return_error_with_tokens(msg)                                          \
-  return pymol::make_error(msg, "\n", indicate_last_token(word, c))
+  return make_selector_error(msg, "\n", indicate_last_token(word, c))
 
 #define return_on_error_with_tokens(expr)                                      \
   {                                                                            \
@@ -9975,15 +9977,15 @@ pymol::Result<sele_array_t> SelectorEvaluate(PyMOLGlobals* G,
   }
 
   if (!ok) {
-    return pymol::Error(indicate_last_token(word, c));
+    return make_selector_error(indicate_last_token(word, c));
   }
 
   if (depth != 1) {
-    return pymol::Error("Malformed selection.");
+    return make_selector_error("Malformed selection.");
   }
 
   if (Stack[depth].type != STYP_LIST) {
-    return pymol::Error("Invalid selection.");
+    return make_selector_error("Invalid selection.");
   }
 
   return std::move(Stack[totDepth].sele); /* return the selection list */

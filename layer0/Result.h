@@ -20,6 +20,7 @@ public:
     QUIET,
     MEMORY,
     INCENTIVE_ONLY,
+    SELECTOR,
   };
 
   Error() {}
