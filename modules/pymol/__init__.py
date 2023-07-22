@@ -496,6 +496,14 @@ class IncentiveOnlyException(CmdException):
                     '    full featured "Incentive PyMOL" version.\n'
         super(IncentiveOnlyException, self).__init__(message)
 
+
+class SelectorException(CmdException):
+    '''
+    Exception type for selection errors
+    '''
+    label = "Selector-Error"
+
+
 class Scratch_Storage:
     '''
     Generic namespace

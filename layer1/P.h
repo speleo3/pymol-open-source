@@ -331,6 +331,7 @@ extern PyTypeObject *P_wrapper;     /* used by P.c for lazy-loading settings/pro
 extern PyObject *P_CmdException;    /* pymol.CmdException */
 extern PyObject *P_QuietException;  /* pymol.parsing.CmdException */
 extern PyObject *P_IncentiveOnlyException; /* pymol.IncentiveOnlyException */
+extern PyObject *P_SelectorException;      /* pymol.SelectorException */
 
 #endif
 #endif

@@ -317,6 +317,9 @@ static PyObject* APIFailure(PyMOLGlobals* G, const pymol::Error& error)
   case pymol::Error::INCENTIVE_ONLY:
     exc_type = P_IncentiveOnlyException;
     break;
+  case pymol::Error::SELECTOR:
+    exc_type = P_SelectorException;
+    break;
   default:
     exc_type = P_CmdException;
   }
