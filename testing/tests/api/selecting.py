@@ -1,4 +1,5 @@
 
+import pymol
 from pymol import cmd, testing, stored
 
 class TestSelecting(testing.PyMOLTestCase):
@@ -12,6 +13,12 @@ class TestSelecting(testing.PyMOLTestCase):
             self.assertTrue("no_such_name" in e.message)
             return
         self.fail("did not raise")
+
+    @testing.requires_version('2.6')
+    def test_SelectorException(self):
+        self.assertRaises(pymol.SelectorException, cmd.center, "no_such_name")
+        self.assertRaises(pymol.SelectorException, cmd.count_atoms, "()")
+        self.assertRaises(pymol.SelectorException, cmd.count_atoms, "resi")
 
     def testDeselect(self):
         cmd.load(self.datafile("1oky.pdb.gz"), "m1")
