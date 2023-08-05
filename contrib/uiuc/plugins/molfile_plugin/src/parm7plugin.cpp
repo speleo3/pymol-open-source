@@ -24,6 +24,7 @@
 #include "molfile_plugin.h"
 #include "ReadPARM7.h"
 
+namespace {
 typedef struct {
   parmstruct *prm;
   int popn;
@@ -31,6 +32,7 @@ typedef struct {
   int nbonds;
   int *from, *to;
 } parmdata;
+}
 
 static void *open_parm7_read(const char *filename, const char *,int *natoms) {
   FILE *fd;

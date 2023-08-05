@@ -59,7 +59,7 @@
 #endif
 
 
-typedef struct parm {
+typedef struct {
   char title[85];
   char version[85];
   int   IfBox, Nmxrs, IfCap,
