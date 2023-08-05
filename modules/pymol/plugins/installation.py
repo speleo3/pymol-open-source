@@ -53,8 +53,9 @@ def cmp_version(v1, v2):
     if v2 == '':
         return 1
     try:
-        v1_parts = list(map(int, v1.split('.')))
-        v2_parts = list(map(int, v2.split('.')))
+        from packaging.version import parse as Version
+        v1_parts = Version(v1)
+        v2_parts = Version(v2)
         return (v1_parts > v2_parts) - (v1_parts < v2_parts)
     except:
         print(' Warning: Version parsing failed for', v1, 'and/or', v2)
