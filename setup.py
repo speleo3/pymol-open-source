@@ -7,13 +7,17 @@
 # pre-installed into the system.
 
 import argparse
+import functools
 import glob
 import os
 import pathlib
 import re
 import sys
 import sysconfig
+import shlex
 import shutil
+
+from typing import Iterator, Union, Callable
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -133,6 +137,70 @@ def guess_msgpackc():
                     return 'c++11'
 
     return 'no'
+
+
+def change_root(new_root: str, pathname: str) -> str:
+    _, pathname = os.path.splitdrive(pathname)
+    pathname = pathname.lstrip("/\\")
+    assert not os.path.isabs(pathname)
+    return os.path.join(new_root, pathname)
+
+
+def test_change_root():
+    if os.path.sep == "\\":
+        assert change_root(r"X:\new\root", r"rel\path") == r"X:\new\root\rel\path"
+        assert change_root(r"X:\new\root", r"\abs\path") == r"X:\new\root\abs\path"
+        assert change_root(r"X:\new\root", r"C:\abs\path") == r"X:\new\root\abs\path"
+    else:
+        assert change_root("/new/root", "rel/path") == "/new/root/rel/path"
+        assert change_root("/new/root", "/abs/path") == "/new/root/abs/path"
+
+
+test_change_root()
+
+cached_getmtime = functools.cache(os.path.getmtime)
+
+
+def get_dot_d_depencendies(obj: str) -> Iterator[str]:
+    """
+    Parse .d file (Makefile syntax)
+
+    Args:
+      obj: Path to object file
+
+    Returns:
+      Iterator over dependency paths
+    """
+    with open(os.path.splitext(obj)[0] + '.d') as handle:
+        contents = handle.read().split(': ', 1)[1]
+    contents = contents.replace('\\\n', ' ')
+    for dep in shlex.split(contents):
+        yield dep
+
+
+def needs_compile_dot_d(obj: str, src: str) -> bool:
+    """
+    Returns true if any source or header dependency changed for the object
+    file.  Parses dependencies from .d files, ignores the `src` argument.
+    """
+    try:
+        obj_mtime = os.path.getmtime(obj)
+        return any(obj_mtime < cached_getmtime(dep)
+                   for dep in get_dot_d_depencendies(obj))
+    except EnvironmentError:
+        return True
+
+
+if 0:
+    from pybind11.setup_helpers import ParallelCompile
+
+    os.environ["CPPFLAGS"] = os.getenv("CPPFLAGS", "") + " -MMD"
+
+    if options.jobs:
+        os.environ["NPY_NUM_BUILD_JOBS"] = str(options.jobs)
+
+    ParallelCompile("NPY_NUM_BUILD_JOBS",
+                    needs_recompile=needs_compile_dot_d).install()
 
 
 class CMakeExtension(Extension):

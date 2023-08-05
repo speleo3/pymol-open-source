@@ -29,6 +29,7 @@ jobs:
         python3-setuptools
         python3-numpy
         python3-pil
+        python3-pybind11
         python3-pytest
 
     - name: Install collada2gltf
