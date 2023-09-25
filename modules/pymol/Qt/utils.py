@@ -288,7 +288,9 @@ def loadUi(uifile, widget):
 
     if pysideuic is None:
         import subprocess
-        p = subprocess.Popen(['uic', '-g', 'python', uifile],
+        import shutil
+        uic_exe = shutil.which("pyside2-uic") or "uic"
+        p = subprocess.Popen([uic_exe, '-g', 'python', uifile],
                              stdout=subprocess.PIPE)
         source = p.communicate()[0]
         # workaround for empty retranslateUi bug
