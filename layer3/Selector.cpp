@@ -1077,6 +1077,9 @@ int SelectorClassifyAtoms(PyMOLGlobals * G, int sele, int preserve,
     n_dummies = cNDummyAtoms;
   }
   a = 0;
+
+  int n_preserved = 0;
+
   while(a < I->Table.size()) {
     obj = I->Obj[I->Table[a].model];
     at = I->Table[a].atom;
@@ -1114,7 +1117,11 @@ int SelectorClassifyAtoms(PyMOLGlobals * G, int sele, int preserve,
       a0++;
       a1--;
 
-      mask = 0;
+      mask = (ai->flags & cAtomFlag_class);
+
+      if (mask && SettingGet<bool>(G, cSetting_preserve_classified)) {
+        ++n_preserved;
+      } else
       if(!ai->hetatm && AtomInfoKnownProteinResName(LexStr(G, ai->resn)))
         mask = cAtomFlag_polymer | cAtomFlag_protein;
       else if(!ai->hetatm && AtomInfoKnownNucleicResName(LexStr(G, ai->resn)))
@@ -1347,6 +1354,13 @@ int SelectorClassifyAtoms(PyMOLGlobals * G, int sele, int preserve,
     }
     a++;
   }
+
+  if (n_preserved) {
+    PRINTFB(G, FB_Selector, FB_Details)
+    " %s-Detail: Preserved class flags on %d atoms\n", __func__,
+        n_preserved ENDFB(G);
+  }
+
   return true;
 }
 

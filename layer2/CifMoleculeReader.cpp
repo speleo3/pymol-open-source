@@ -1392,6 +1392,22 @@ static void add_missing_ca_sub(PyMOLGlobals * G,
 }
 
 /**
+ * Set the atom classification according to the entity annotation.
+ */
+static void classify_entities(
+    PyMOLGlobals* G, pymol::vla<AtomInfoType>& atInfo, CifContentInfo& info)
+{
+  for (int i = 0, n = atInfo.size(); i < n; ++i) {
+    auto& atom = atInfo[i];
+    const char* entity_id = LexStr(G, atom.custom);
+    if (info.is_polypeptide(entity_id)) {
+      assert(!(atom.flags & cAtomFlag_class));
+      atom.flags |= cAtomFlag_polymer | cAtomFlag_protein;
+    }
+  }
+}
+
+/**
  * Read missing residues / full sequence
  *
  * This function relies on the label_seq_id numbering which must be available
@@ -2104,6 +2120,8 @@ static ObjectMolecule *ObjectMoleculeReadCifData(PyMOLGlobals * G,
     if (!I->DiscreteFlag && !SettingGetGlobal_i(G, cSetting_retain_order)) {
       add_missing_ca(G, I->AtomInfo, info);
     }
+
+    classify_entities(G, I->AtomInfo, info);
   } else if ((csets = read_chem_comp_atom_model(G, datablock, &I->AtomInfo))) {
     info.type = CIF_CHEM_COMP;
   } else {
