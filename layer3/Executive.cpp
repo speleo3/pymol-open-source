@@ -9353,7 +9353,9 @@ pymol::Result<> ExecutiveBond(PyMOLGlobals* G, const char* s1, const char* s2,
     ObjectMolecule *obj1 = SelectorGetSingleObjectMolecule(G, sele1);
     ObjectMolecule *obj2 = SelectorGetSingleObjectMolecule(G, sele2);
     if((!obj1) || (!obj2) || (obj1 != obj2)) {
-      if((!quiet) && (mode == 1)) {
+      if (!quiet && mode == 1 &&          //
+          tmpsele1->getAtomCount() > 0 && //
+          tmpsele2->getAtomCount() > 0) {
         PRINTFB(G, FB_Editor, FB_Warnings)
           "Editor-Warning: bonds cannot be created between objects, only within.\n"
           ENDFB(G);
@@ -9407,16 +9409,16 @@ pymol::Result<> ExecutiveBond(PyMOLGlobals* G, const char* s1, const char* s2,
         switch (mode) {
         case 1:
           PRINTFB(G, FB_Editor, FB_Warnings)
-            "Bond-Warning: no bonds added." ENDFB(G);
+            "Bond-Warning: no bonds added.\n" ENDFB(G);
           break;
         case 2:
           PRINTFB(G, FB_Editor, FB_Warnings)
-            "Valence-Warning: no bond valences changed." ENDFB(G);
+            "Valence-Warning: no bond valences changed.\n" ENDFB(G);
           break;
         case 0:
         default:
           PRINTFB(G, FB_Editor, FB_Warnings)
-            "Unbond-Warning: no bonds removed." ENDFB(G);
+            "Unbond-Warning: no bonds removed.\n" ENDFB(G);
           break;
         }
       }
