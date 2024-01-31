@@ -50,8 +50,9 @@ jobs:
         DEBUG: 1
 
     - name: Test
+      working-directory: ./testing
       run: |
-        pymol -ckqy testing/testing.py --run all
+        python -m pytest -v
 
 
   build-Windows:
@@ -108,9 +109,10 @@ jobs:
         pip install -v --config-settings testing=True .[dev]
 
     - name: Test
+      working-directory: ./testing
       run: |
         conda activate $env:CONDA_ENV_NAME
-        pymol -ckqy testing\testing.py --run all
+        python -m pytest -v
 
 
   build-MacOS:
@@ -166,7 +168,8 @@ jobs:
         pip install -v --config-settings testing=True '.[dev]'
 
     - name: Test
+      working-directory: ./testing
       run: |
         source activate $CONDA_ENV_NAME
-        pymol -ckqy testing/testing.py --run all
+        python -m pytest -v
 
