@@ -6,6 +6,8 @@ jobs:
   build-Linux:
 
     runs-on: ubuntu-22.04
+    env:
+      PREFIX: ${{ github.workspace }}/install-prefix
 
     steps:
     - uses: actions/checkout@v4.0.0
@@ -31,6 +33,7 @@ jobs:
         python3-pil
         python3-pybind11
         python3-pytest
+        python3-venv
 
     - name: Install collada2gltf
       run: |
@@ -42,15 +45,20 @@ jobs:
         git clone --depth 1 https://github.com/rcsb/mmtf-cpp.git
         cp -R mmtf-cpp/include/mmtf* include/
 
+    - name: Set up venv
+      run: |
+        python -m venv --system-site-packages $PREFIX
+
     - name: Build
       run: |
-        python setup.py --testing install --prefix=install-prefix
+        $PREFIX/bin/python setup.py --testing install
       env:
         DEBUG: 1
 
     - name: Test
+      working-directory: ./testing
       run: |
-        ./install-prefix/bin/pymol -ckqy testing/testing.py --run all
+        $PREFIX/bin/python -m pytest
 
   build-Windows:
 
