@@ -367,6 +367,18 @@ else:
                 raise AssertionError(msg)
             self.test.timings.append((self.msg, delta))
 
+    def getfile(cls) -> str:
+        try:
+            return inspect.getfile(cls)
+        except Exception as ex:
+            print("inspect.getfile failed:", ex)
+        return _getfile_via_callable_attr(cls)
+
+    def _getfile_via_callable_attr(cls) -> str:
+        attr = next(k for (k, v) in cls.__dict__.items()
+                    if not k.startswith("_") and callable(v))
+        return getattr(cls, attr).__code__.co_filename
+
     class PyMOLTestCase(PyMOLTestCaseMeta("Base", (unittest.TestCase,), {})):
         '''
         Common PyMOL unit tests should subclass this.
@@ -387,7 +399,7 @@ else:
             if cliargs.no_undo:
                 cmd.set('suspend_undo', updates=0)
 
-            cwd = os.path.dirname(inspect.getfile(type(self)))
+            cwd = os.path.dirname(getfile(type(self)))
             os.chdir(cwd)
 
             cmd.feedback('push')
