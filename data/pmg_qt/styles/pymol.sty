@@ -1,10 +1,35 @@
+#extgui,
+QMainWindow::separator,
+QMenuBar {
+    background-color:#ac9;
+}
+
+QPlainTextEdit#feedback_browser
+{
+    background-color:#ddd;
+}
+
 #builder QPushButton
 {
     padding:        1px 3px;
 }
 
+QMainWindow::separator:hover,
+QPushButton:hover[quickbutton=true]
+{
+    background-color:#8af;
+}
+
+QMainWindow::separator:pressed,
+QPushButton:pressed[quickbutton=true]
+{
+    background-color:#abf;
+}
+
 QPushButton[quickbutton=true]
 {
+    border:         1px solid #555;
+    border-radius:  3px;
     padding:        1px 5px;
 }
 
