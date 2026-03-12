@@ -30,7 +30,7 @@ def test_look_at():
 
 @pytest.mark.skipif(not _has_pdb2pqr, reason="pdb2pqr not installed")
 def test_protonate():
-    cmd.load("testing/data/1rx1.pdb")
+    cmd.load(test_utils.datafile("1rx1.pdb"))
 
     # Apply visual settings to verify preservation
     cmd.color("green", "1rx1")
@@ -61,7 +61,7 @@ def test_protonate():
 
 @pytest.mark.skipif(not _has_pdb2pqr, reason="pdb2pqr not installed")
 def test_protonate_low_pH():
-    cmd.load("testing/data/1rx1.pdb")
+    cmd.load(test_utils.datafile("1rx1.pdb"))
 
     cmd.protonate("1rx1", pH=2.0)
 
@@ -89,7 +89,7 @@ def test_protonate_fallback():
     """Test textbook pKa fallback (no pdb2pqr needed)."""
     from pymol.editing import _protonate_fallback
 
-    cmd.load("testing/data/1rx1.pdb")
+    cmd.load(test_utils.datafile("1rx1.pdb"))
     cmd.color("green", "1rx1")
     heavy_count = cmd.count_atoms("1rx1 and not hydro")
 
@@ -131,7 +131,7 @@ def test_protonate_fallback_low_pH():
     """Test fallback at low pH — carboxylates should be protonated."""
     from pymol.editing import _protonate_fallback
 
-    cmd.load("testing/data/1rx1.pdb")
+    cmd.load(test_utils.datafile("1rx1.pdb"))
 
     _protonate_fallback("all", "1rx1", 2.0, 0, 1, _self=cmd)
 
