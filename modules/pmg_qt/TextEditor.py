@@ -118,10 +118,10 @@ class TextEditor(QtWidgets.QMainWindow):
 
         menubar = self.root.menuBar()
         filemenu = menubar.addMenu("File")
-        filemenu.addAction("Open", QtGui.QKeySequence("Ctrl+O"), self.doOpen)
-        filemenu.addAction("Save", QtGui.QKeySequence("Ctrl+S"), self.doSave)
-        filemenu.addAction("Save as ...", QtGui.QKeySequence("Ctrl+Shift+S"),
-                           self.doSaveAs)
+        filemenu.addAction("Open", self.doOpen, QtGui.QKeySequence("Ctrl+O"))
+        filemenu.addAction("Save", self.doSave, QtGui.QKeySequence("Ctrl+S"))
+        filemenu.addAction("Save as ...",
+                           self.doSaveAs, QtGui.QKeySequence("Ctrl+Shift+S"))
 
         syntaxmenu = menubar.addMenu("Syntax")
         syntaxgroup = QtWidgets.QActionGroup(self)
