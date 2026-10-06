@@ -254,6 +254,9 @@ PyMOL> color ye<TAB>    (will autocomplete "yellow")
             [
                 ('Undo', cmd.undo),
                 ('Redo', cmd.redo),
+                ('Grid', lambda: cmd.set("grid_mode",
+                     (cmd.get_setting_int("grid_mode") + 1) % 4,
+                     log=1, quiet=0)),
             ],
         ]:
             hbox = QtWidgets.QHBoxLayout()

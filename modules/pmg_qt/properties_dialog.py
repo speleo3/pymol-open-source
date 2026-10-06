@@ -99,6 +99,7 @@ class PropsDialog(QtWidgets.QWidget):
                             # 'stereo',
                             'vdw', 'ss', 'color', 'reps',
                             'flags',
+                            'custom',
                             'label', 'cartoon',
                             'protons', 'geom', 'valence', 'elec_radius']
         self.keys_astate_builtins = ['state', 'x', 'y', 'z']
