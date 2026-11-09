@@ -1245,6 +1245,11 @@ def execapp():
     app = PyMOLApplication(['PyMOL'])
     app.setWindowIcon(make_pymol_qicon())
 
+    # PySide: Destroy QApplication and all wrapped objects before cmd.quit()
+    # calls exit(), otherwise Shiboken's static destructors segfault.
+    if pymol.Qt.PYQT_NAME.startswith('PySide') and hasattr(app, 'shutdown'):
+        pymol._exit_hook = app.shutdown
+
     window = PyMOLQtGUI()
     window.setWindowTitle("PyMOL")
 

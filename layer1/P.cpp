@@ -2184,6 +2184,22 @@ void PExit(PyMOLGlobals * G, int code)
 
   PyMOL_Free(G->PyMOL);
 
+  // Give the GUI a chance to clean up before exit() runs C++ static
+  // destructors (e.g. PySide6 segfaults if wrapped Qt objects are still
+  // alive at that point).
+  if (P_pymol) {
+    if (auto hook = PyObject_GetAttrString(P_pymol, "_exit_hook")) {
+      PXDecRef(PyObject_CallNoArgs(hook));
+      Py_DECREF(hook);
+    }
+    if (PyErr_Occurred()) {
+      if (!PyErr_ExceptionMatches(PyExc_AttributeError)) {
+        PyErr_Print();
+      }
+      PyErr_Clear();
+    }
+  }
+
 #if 1
   /* we're having trouble with threading errors after calling Py_Exit,
      so for the time being, let's just take the process down at this
