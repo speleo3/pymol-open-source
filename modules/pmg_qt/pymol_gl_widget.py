@@ -68,6 +68,11 @@ class PyMOLGLWidget(BaseGLWidget):
         # OpenGL context setup
         if USE_QOPENGLWIDGET:
             f = QtGui.QSurfaceFormat()
+
+            # PyMOL needs desktop OpenGL (not built with PURE_OPENGL_ES_2).
+            # Qt on Wayland (EGL) may default to an OpenGL ES context,
+            # which fails to compile our shaders (e.g. gl_FrontColor).
+            f.setRenderableType(QtGui.QSurfaceFormat.RenderableType.OpenGL)
         else:
             f = QtOpenGL.QGLFormat()
 

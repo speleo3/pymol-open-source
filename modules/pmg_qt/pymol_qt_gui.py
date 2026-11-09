@@ -1222,6 +1222,14 @@ def execapp():
     if hasattr(Qt, 'AA_UseDesktopOpenGL') and pymol.IS_WINDOWS:
         QtCore.QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_UseDesktopOpenGL)
 
+    # Request desktop OpenGL for all contexts (Qt on Wayland may default to
+    # OpenGL ES). Must be the default format (not just the GL widget's) so
+    # that the window's compositing context can share with the GL widget's
+    # context, otherwise the QOpenGLWidget stays black.
+    surface_format = QtGui.QSurfaceFormat.defaultFormat()
+    surface_format.setRenderableType(QtGui.QSurfaceFormat.RenderableType.OpenGL)
+    QtGui.QSurfaceFormat.setDefaultFormat(surface_format)
+
     # enable 4K scaling on Windows and Linux
     if hasattr(Qt, 'AA_EnableHighDpiScaling') and not any(
             v in os.environ
