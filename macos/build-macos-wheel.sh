@@ -17,6 +17,7 @@
 #   JOBS                      parallel jobs (default: number of CPUs)
 #   DIST_NAME                 distribution name of the wheel
 #                             (default: pymol-open-source)
+#   APP_NAME                  name of the macOS app launcher (default: PyMOL)
 #
 # Output: wheels in $WORKDIR/wheelhouse
 
@@ -30,6 +31,7 @@ WORKDIR="$(cd "$WORKDIR" && pwd)"
 export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
 export JOBS="${JOBS:-$(sysctl -n hw.ncpu)}"
 DIST_NAME="${DIST_NAME:-pymol-open-source}"
+APP_NAME="${APP_NAME:-PyMOL}"
 ARCH=arm64
 
 if [[ $# -eq 0 ]]; then
@@ -250,16 +252,38 @@ stage_source() {
     ln -s "$SRCDIR/.git" "$stage/.git"
 }
 
+# Build the app launcher bundle (see macos/launcher.m). It does not know
+# the Python interpreter yet. "python -m pymol.macos_app install" copies it
+# to ~/Applications and links it to the current environment.
+build_app() {
+    local stage="$1" app="$2"
+    rm -rf "$app"
+    mkdir -p "$app/Contents/MacOS"
+    cp -R "$stage/macos/Contents/Resources" "$app/Contents/"
+    sed "s/%APPNAME%/$APP_NAME/g" "$stage/macos/Contents/Info.plist" \
+        > "$app/Contents/Info.plist"
+    plutil -replace LSMinimumSystemVersion \
+        -string "$MACOSX_DEPLOYMENT_TARGET" "$app/Contents/Info.plist"
+    plutil -lint "$app/Contents/Info.plist" >/dev/null
+    clang -arch "$ARCH" -mmacosx-version-min="$MACOSX_DEPLOYMENT_TARGET" \
+        -O2 -fobjc-arc -framework Cocoa \
+        "$stage/macos/launcher.m" -o "$app/Contents/MacOS/$APP_NAME"
+}
+
 # Add files to the wheel:
+# - the app launcher as pymol/macos/<name>.app
 # - the licenses of the statically linked libraries in
 #   .dist-info/licenses/thirdparty
 add_extras() {
     local python="$1" whl="$2" tmp distinfo
+    local app="$3"
     tmp=$(mktemp -d "$WORKDIR/extras.XXXXXX")
     "$python" -m wheel unpack -d "$tmp" "$whl" >/dev/null
     distinfo=$(echo "$tmp"/*/*.dist-info)
     mkdir -p "$distinfo/licenses/thirdparty"
     cp -R "$PREFIX/licenses/." "$distinfo/licenses/thirdparty/"
+    mkdir -p "$(dirname "$distinfo")/pymol/macos"
+    cp -R "$app" "$(dirname "$distinfo")/pymol/macos/"
     rm "$whl"
     "$python" -m wheel pack -d "$(dirname "$whl")" "$(dirname "$distinfo")" >/dev/null
     rm -rf "$tmp"
@@ -283,7 +307,9 @@ check_wheel() {
         local minos
         minos=$(otool -l "$so" | awk '/LC_BUILD_VERSION/{f=1} f&&/minos/{print $2; exit}')
         echo "   minos: $minos, archs: $(lipo -archs "$so")"
-    done < <(find "$tmp" -name '*.so')
+    done < <(find "$tmp" -name '*.so' -o -path '*.app/Contents/MacOS/*' -type f)
+    echo "app launcher:"
+    (cd "$tmp" && ls -d -- pymol/macos/*.app | sed 's/^/   /')
     echo "third-party licenses:"
     (cd "$tmp" && ls -d -- */licenses/thirdparty/* | sed 's/^/   /')
     rm -rf "$tmp"
@@ -339,7 +365,7 @@ build_wheel() {
 
     mkdir -p "$WHEELHOUSE"
     for whl in "$delocated"/*.whl; do
-        add_extras "$venv/bin/python" "$whl"
+        add_extras "$venv/bin/python" "$whl" "$APP"
         log "Check $(basename "$whl")"
         check_wheel "$whl"
         mv "$whl" "$WHEELHOUSE/"
@@ -350,6 +376,9 @@ build_deps
 STAGE="$WORKDIR/src"
 log "Stage source tree in $STAGE"
 stage_source "$STAGE"
+APP="$WORKDIR/app/$APP_NAME.app"
+log "Build $APP_NAME.app"
+build_app "$STAGE" "$APP"
 for python in "$@"; do
     build_wheel "$python" "$STAGE"
 done
