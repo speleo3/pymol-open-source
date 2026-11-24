@@ -1,0 +1,11 @@
+include Makefile
+
+MAMBA_EXE ?= micromamba
+
+# mutually exclusive with install-venv
+install-conda-env: | $(apppath)
+	$(MAMBA_EXE) create --prefix $(venvpath) \
+		-c conda-forge \
+		pymol-open-source \
+		speleo3::pymol-psico \
+		biopython rdkit mdanalysis prolif
